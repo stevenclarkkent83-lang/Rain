@@ -5,33 +5,37 @@ import random
 from rain_drop import RainDrop
 from settings import Settings
 
+
 class Rain:
 
     def __init__(self):
+        pygame.mixer.pre_init(
+            frequency=44100,
+            size=-16,
+            channels=2,
+            buffer=1024  # try 1024, 2048, or 4096
+        )
         pygame.init()
         self.settings = Settings()
         self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+        pygame.display.set_caption("RainDrops")
         self.drops = pygame.sprite.Group()
         self.screen_rect = self.screen.get_rect()
-        pygame.display.set_caption("RainDrops")
-        self.raining = True
         self.clock = pygame.time.Clock()
         self.last_drop = pygame.time.get_ticks()
-        self.rain_sound = pygame.mixer.Sound("sounds/rain.ogg")
-        self.rain_sound.set_volume(0.4)  # start lower, heavy rain is loud
-        self.rain_sound.play(loops=-1)
+        self.settings.rain_sound.play(loops=-1)
+        self.raining = True
 
     def running(self):
         while self.raining:
             self.clock.tick(60)
             self._check_events()
-            self.hits_bottom()
-            self.create_storm()
             self._update_screen()
-
 
     def _update_screen(self):
         self.screen.fill("black")
+        self.hits_bottom()
+        self.create_storm()
         self.drops.draw(self.screen)
         self.drops.update()
         pygame.display.flip()
@@ -43,14 +47,14 @@ class Rain:
                 a_drop = RainDrop(self)
                 a_drop.rect.x = random.randint(
                     0, self.screen_rect.width - a_drop.rect.width)
-                self.drops.add(a_drop)
+                a_drop.y_val = random.randint(1, 3)
+                self.drops.add(a_drop) # type: ignore[arg-type]
                 self.last_drop = now
 
     def hits_bottom(self):
         for drop in self.drops.sprites():
             if drop.rect.bottom >= self.screen_rect.height:
                 drop.kill()
-                #self.drops.remove(drop)
 
     def _check_events(self):
         """Checking for events"""
