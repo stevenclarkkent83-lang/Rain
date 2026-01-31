@@ -3,6 +3,8 @@ import pygame
 import random
 
 from rain_drop import RainDrop
+from splash import Splash
+from splash_drop import SplashDrop
 from settings import Settings
 
 
@@ -19,14 +21,22 @@ class Rain:
         self.settings = Settings()
         self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
         pygame.display.set_caption("RainDrops")
+
+        #Sprite Groups
         self.drops = pygame.sprite.Group()
+        self.splashes = pygame.sprite.Group()
+        self.splash_drops = pygame.sprite.Group()
+
         self.screen_rect = self.screen.get_rect()
-        self.clock = pygame.time.Clock()
-        self.last_drop = pygame.time.get_ticks()
         self.settings.rain_sound.play(loops=-1)
+
+        self.last_drop = pygame.time.get_ticks()
+        self.clock = pygame.time.Clock()
         self.raining = True
 
+
     def running(self):
+
         while self.raining:
             self.clock.tick(60)
             self._check_events()
@@ -38,6 +48,10 @@ class Rain:
         self.create_storm()
         self.drops.draw(self.screen)
         self.drops.update()
+        self.splash_drops.update()
+        self.splash_drops.draw(self.screen)
+        self.splashes.update()
+        self.splashes.draw(self.screen)
         pygame.display.flip()
 
     def create_storm(self):
@@ -54,6 +68,12 @@ class Rain:
     def hits_bottom(self):
         for drop in self.drops.sprites():
             if drop.rect.bottom >= self.screen_rect.height:
+                splash = Splash(drop.rect.centerx, self.screen_rect.bottom - 20)
+                self.splashes.add(splash) # type: ignore[arg-type]
+
+                for _ in range(2):
+                    sd = SplashDrop(drop.rect.centerx, self.screen_rect.bottom - 20)
+                    self.splash_drops.add(sd) # type: ignore[arg-type]
                 drop.kill()
 
     def _check_events(self):
@@ -71,6 +91,8 @@ class Rain:
 
     def _key_up(self, event):
         pass
+
+
 
 
 if __name__ == "__main__":
